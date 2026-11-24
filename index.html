@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PC 탐색 리디자인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;
+--bg:#ffffff;--ink:#191f28;--sub:#4e5968;--mute:#8b95a1;
+--line:#e5e8eb;--field:#f2f4f6;--card:#ffffff;
+--blue:#3182f6;--blue2:#e8f3ff;--blueInk:#1b64da;
+--ok:#0f9d6b;--warn:#f04452;
+--ic1:#2b3440;--ic2:#d1d6db;--ic3:#3182f6;--ic4:#9fc4ff}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Noto Sans KR",system-ui,-apple-system,sans-serif;overflow-x:clip;-webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--blue) 55%,transparent);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(16px,4vw)}
+.note{font-size:13px;color:var(--mute);background:var(--field);text-align:center;padding:6px 16px}
+header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:16px;height:64px}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.02em;white-space:nowrap}
+.logo b{color:var(--blue)}
+.gbox .cta{background:#fff;color:#1b64da}
+.gbox .btn2{background:rgba(255,255,255,.18);color:#fff}
+.search{flex:1;max-width:520px;display:flex;align-items:center;gap:8px;background:var(--field);border-radius:12px;padding:0 14px;height:44px}
+.search input{border:0;background:none;outline:none;flex:1;font-size:16px}
+.search svg{flex:none}
+.hdnav{display:flex;gap:4px;margin-left:auto}
+.hdnav a{color:var(--sub);text-decoration:none;font-size:15px;padding:8px 10px;border-radius:8px;white-space:nowrap}
+.hdnav a:hover{background:var(--field)}
+.guide{padding:28px 0 20px}
+.gbox{background:linear-gradient(135deg,#3182f6,#1b64da);color:#fff;border-radius:24px;padding:28px clamp(20px,3vw,36px);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center}
+.gbox h1{margin:0 0 6px;font-size:clamp(24px,3.2vw,34px);line-height:1.2;letter-spacing:-.02em;font-weight:800;text-wrap:balance}
+.gbox p{margin:0;color:rgba(255,255,255,.85)}
+.cta{border:0;background:var(--blue);color:#fff;font-weight:700;border-radius:14px;padding:0 24px;height:52px;font-size:17px;white-space:nowrap}
+.cta:hover{filter:brightness(.95)}
+.cta:active{transform:scale(.98)}
+.btn2{border:0;background:var(--field);color:var(--ink);font-weight:500;border-radius:12px;padding:0 16px;height:44px;white-space:nowrap}
+.btn2:hover{filter:brightness(.97)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{background:rgba(255,255,255,.18);color:#fff!important;border-radius:999px;padding:4px 12px;font-size:14px;font-weight:500;color:var(--blueInk)}
+.gact{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none}
+.tab{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;height:40px;padding:0 16px;font-weight:500;color:var(--sub)}
+.tab[aria-pressed=true]{background:var(--blue);color:#fff;border-color:var(--blue)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 0 16px;border-bottom:1px solid var(--line)}
+.sel{appearance:none;border:1px solid var(--line);background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b95a1' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;border-radius:10px;height:40px;padding:0 34px 0 12px;font-size:15px}
+.count{color:var(--mute);font-size:14px;margin-right:auto}
+.cmpbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;height:40px;padding:0 14px;font-weight:700;display:flex;gap:6px;align-items:center}
+.cmpbtn[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.cmpmsg{display:none;margin:12px 0 0;background:var(--blue2);color:var(--blueInk);border-radius:12px;padding:10px 14px;font-size:15px;font-weight:500}
+body.cmp .cmpmsg{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;padding:20px 0 120px}
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:8px;transition:box-shadow .2s,opacity .2s,transform .2s;outline:none}
+.card:hover{box-shadow:0 6px 24px rgba(0,30,80,.08)}
+.thumb{background:var(--field);border-radius:14px;aspect-ratio:4/3;display:grid;place-items:center}
+.thumb svg{width:72%;height:72%}
+.badge{position:absolute;top:20px;left:20px;font-size:12px;font-weight:700;border-radius:8px;padding:3px 8px;background:var(--card);color:var(--sub)}
+.badge.ok{background:var(--blue);color:#fff}
+.badge.best{background:var(--ok);color:#fff}
+.cname{font-weight:700;font-size:16px;line-height:1.35;letter-spacing:-.01em}
+.ckey{font-size:14px;color:var(--sub);line-height:1.45}
+.reason{font-size:13px;color:var(--blueInk);font-weight:500}
+.reason.no{color:var(--warn)}
+.cfoot{display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;padding-top:4px}
+.price{font-weight:800;font-size:19px;white-space:nowrap}
+.price small{font-size:14px;font-weight:500}
+.tier{font-size:13px;color:var(--mute);white-space:nowrap}
+.mini{height:4px;border-radius:4px;background:var(--field);overflow:hidden}
+.mini i{display:block;height:100%;background:var(--blue);border-radius:4px}
+body.cmp .card{cursor:pointer}
+body.cmp .card.can{box-shadow:0 0 0 2px var(--blue),0 0 18px 2px color-mix(in srgb,var(--blue) 45%,transparent)}
+body.cmp .card.cant{opacity:.28;pointer-events:none;filter:grayscale(.6)}
+body.cmp .card.picked{box-shadow:0 0 0 3px var(--blue),0 0 24px 4px color-mix(in srgb,var(--blue) 55%,transparent)}
+.pick{display:none;position:absolute;top:20px;right:20px;width:28px;height:28px;border-radius:50%;background:var(--card);border:2px solid var(--line);font-size:14px;font-weight:800;place-items:center;color:#fff}
+body.cmp .pick{display:grid}
+.picked .pick{background:var(--blue);border-color:var(--blue)}
+.empty{grid-column:1/-1;text-align:center;padding:60px 16px;color:var(--sub)}
+.pop{position:fixed;z-index:40;width:300px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 40px rgba(0,20,60,.16);padding:18px;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}
+.pop.on{opacity:1;transform:none}
+.pop.sheet{pointer-events:auto;left:12px!important;right:12px;bottom:12px;top:auto!important;width:auto;max-height:75vh;overflow:auto}
+.ptop{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:12px}
+.psum{font-weight:800;font-size:19px;letter-spacing:-.02em;line-height:1.3}
+.pdesc{font-size:14px;color:var(--sub);margin-top:2px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tag{font-size:13px;font-weight:500;color:var(--blueInk);background:var(--blue2);border-radius:8px;padding:2px 8px}
+.gauge{margin-top:14px}
+.gl{display:flex;justify-content:space-between;font-size:13px;color:var(--mute)}
+.gl b{color:var(--ink);font-size:14px}
+.gt{position:relative;height:10px;border-radius:10px;background:linear-gradient(90deg,#d6e6ff,#3182f6 70%,#1b3fae);margin:6px 0 4px}
+.gt .knob{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid #1b64da;transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.gt .need{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--warn)}
+.gt .need{border-radius:2px;z-index:0}
+.gt .knob{z-index:1}
+.nl{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--warn);font-weight:700}
+.nl i{width:10px;height:10px;border-radius:2px;background:var(--warn);flex:none}
+.nl span{color:var(--sub);font-weight:500}
+.fps{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.fps span{font-size:13px;background:var(--field);border-radius:8px;padding:2px 8px;white-space:nowrap}
+.fps b{color:var(--blueInk)}
+.specs{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 12px;font-size:14px}
+.specs dt{color:var(--mute);white-space:nowrap}
+.specs dd{margin:0;font-weight:500}
+.tray{position:fixed;left:50%;bottom:16px;transform:translate(-50%,140%);z-index:35;background:#191f28;color:#fff;border-radius:18px;padding:10px 10px 10px 18px;display:flex;align-items:center;gap:12px;width:min(720px,calc(100% - 24px));transition:transform .25s}
+.tray.on{transform:translate(-50%,0)}
+.tray .tl{flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tray .ti{flex:none;background:rgba(255,255,255,.14);border-radius:10px;padding:6px 10px;font-size:14px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.tray .cta{height:44px;font-size:15px;padding:0 16px}
+.tray .x{border:0;background:none;color:inherit;opacity:.7;height:44px;padding:0 8px;white-space:nowrap}
+.ov{position:fixed;inset:0;z-index:50;background:rgba(0,10,30,.45);display:none;align-items:center;justify-content:center;padding:16px}
+.ov.on{display:flex}
+.modal{background:var(--card);border-radius:24px;width:min(560px,100%);max-height:min(760px,100%);display:flex;flex-direction:column;overflow:hidden}
+.modal.wide{width:min(980px,100%)}
+.mh{display:flex;align-items:center;gap:8px;padding:14px 16px 0}
+.ib{border:0;background:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--sub)}
+.ib:hover{background:var(--field)}
+.prog{flex:1;height:6px;background:var(--field);border-radius:6px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--blue);border-radius:6px;transition:width .3s}
+.stepn{font-size:14px;color:var(--mute);white-space:nowrap}
+.mb{padding:20px 24px 12px;overflow:auto;flex:1}
+.mb h2{margin:0 0 6px;font-size:clamp(22px,4vw,26px);line-height:1.25;letter-spacing:-.02em;font-weight:800}
+.mb .qs{margin:0 0 18px;color:var(--sub);font-size:15px}
+.opts{display:grid;gap:8px}
+.opt{display:flex;align-items:center;gap:14px;text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:14px 16px;min-height:64px;transition:border-color .15s,background .15s}
+.opt:hover{background:var(--field)}
+.opt[aria-pressed=true]{border-color:var(--blue);background:var(--blue2)}
+.opt .oi{flex:none;width:40px;height:40px;border-radius:12px;background:var(--field);display:grid;place-items:center;font-weight:800;color:var(--blueInk);font-size:15px}
+.opt[aria-pressed=true] .oi{background:var(--blue);color:#fff}
+.opt .ot{font-weight:700;font-size:16px}
+.opt .od{font-size:14px;color:var(--sub);line-height:1.4}
+.opts.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.more{margin-top:10px;border:1px dashed var(--line);background:none;border-radius:14px;width:100%;height:48px;color:var(--blueInk);font-weight:700}
+.glist{display:none;margin-top:10px;border:1px solid var(--line);border-radius:16px;padding:8px;max-height:240px;overflow:auto}
+.glist.on{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.gi{border:1.5px solid transparent;background:var(--field);border-radius:10px;min-height:44px;text-align:left;padding:0 12px;font-size:15px}
+.gi[aria-pressed=true]{border-color:var(--blue);background:var(--blue2);color:var(--blueInk);font-weight:700}
+.mf{padding:12px 24px 20px;display:flex;gap:8px}
+.mf .cta{flex:1}
+.mf .cta:disabled{opacity:.4;cursor:default}
+.ctab{overflow:auto;padding:0 8px 8px}
+.ctab table{border-collapse:collapse;width:100%;min-width:560px;font-size:15px}
+.ctab th,.ctab td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.ctab thead th{position:sticky;top:0;background:var(--card);font-size:16px;line-height:1.35}
+.ctab tbody th{color:var(--mute);font-weight:500;white-space:nowrap;width:110px}
+.ctab td.win{color:var(--blueInk);font-weight:700}
+.ctab td.win::after{content:" 우세";font-size:12px;background:var(--blue2);border-radius:6px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+.ctab .thn{display:block;font-size:13px;color:var(--mute);font-weight:500;margin-top:2px}
+@media(max-width:760px){.gbox{grid-template-columns:1fr}.gact{justify-content:flex-start}.hdnav{display:none}}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{padding:8px;border-radius:16px}.badge{top:14px;left:14px}.pick{top:14px;right:14px}.cname{font-size:15px}.ckey{font-size:13px}.price{font-size:17px}.mb{padding:16px 18px 8px}.mf{padding:10px 18px 16px}.opts.two{grid-template-columns:1fr}.logo{font-size:17px}}
+@media(max-width:400px){.grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="note">다나와 PC 카테고리 리디자인 컨셉 · 비공식 학생 프로토타입이에요. 상품명, 가격, 프레임 수치는 모두 예시 값이에요.</div>
+<header><div class="wrap hd">
+  <div class="logo">PC <b>탐색</b></div>
+  <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color:var(--mute)"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="제품명이나 부품으로 검색 (예: RTX 5070)" aria-label="검색"></label>
+  <nav class="hdnav"><a href="#list">조립PC</a><a href="#list">노트북</a><a href="#list">모니터</a><a href="#list">부품</a></nav>
+</div></header>
+
+<main class="wrap">
+  <section class="guide"><div class="gbox">
+    <div id="gtext">
+      <h1>어떤 사양이 필요한지 몰라도 괜찮아요</h1>
+      <p>용도와 하는 게임만 알려주시면 맞는 제품을 골라드릴게요. 질문은 5~7개예요.</p>
+    </div>
+    <div class="gact" id="gact"><button class="cta" id="start">맞춤 추천 받기</button></div>
+  </div></section>
+
+  <div class="tabs" id="tabs" role="toolbar" aria-label="카테고리"></div>
+  <div class="bar" id="list">
+    <span class="count" id="count"></span>
+    <select class="sel" id="fprice" aria-label="가격대"><option value="all">가격 전체</option><option value="0-50">50만원 이하</option><option value="50-150">50~150만원</option><option value="150-300">150~300만원</option><option value="300-9999">300만원 이상</option></select>
+    <select class="sel" id="ftier" aria-label="성능"><option value="all">성능 전체</option><option value="0-40">저사양 · 사무용</option><option value="40-70">중간 사양</option><option value="70-101">고사양</option></select>
+    <select class="sel" id="fsort" aria-label="정렬"><option value="rec">추천순</option><option value="low">낮은 가격순</option><option value="high">높은 가격순</option><option value="perf">성능 높은순</option></select>
+    <button class="cmpbtn" id="cmp" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M8 3v18M16 3v18M3 8h5M16 16h5"/></svg>비교하기</button>
+  </div>
+  <p class="cmpmsg" id="cmpmsg">비교할 첫 제품을 골라주세요.</p>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="pop" id="pop" role="dialog" aria-label="제품 요약"></div>
+
+<div class="tray" id="tray"><div class="tl" id="tl"></div><button class="x" id="tclear">비우기</button><button class="cta" id="tgo">비교 보기</button></div>
+
+<div class="ov" id="wov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="wq">
+  <div class="mh"><button class="ib" id="wback" aria-label="이전"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m15 5-7 7 7 7"/></svg></button><div class="prog"><i id="wprog"></i></div><span class="stepn" id="wn"></span><button class="ib" id="wclose" aria-label="닫기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="mb" id="wbody"></div>
+  <div class="mf"><button class="cta" id="wnext">다음</button></div>
+</div></div>
+
+<div class="ov" id="cov"><div class="modal wide" role="dialog" aria-modal="true" aria-label="제품 비교">
+  <div class="mh"><strong style="flex:1;font-size:19px;padding-left:8px">제품 비교</strong><button class="ib" id="cclose" aria-label="닫기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="ctab" id="ctab"></div>
+</div></div>
+
+<script>
+{
+const CATS=[["all","전체"],["pc","조립PC"],["laptop","노트북"],["monitor","모니터"],["periph","주변기기"],["part","부품"]];
+const P=[
+{id:"pc1",cat:"pc",name:"라이젠5 8600G 내장그래픽 사무용 PC",price:59,perf:22,sum:"가벼운 사무·학업용 PC",desc:"문서, 인터넷 강의, 유튜브에 충분해요",uses:["사무용","학업용","인터넷"],key:"내장그래픽 · 16GB · SSD 500GB",sp:{CPU:"AMD 라이젠5 8600G (6코어)",그래픽:"내장 Radeon 760M",메모리:"DDR5 16GB",저장장치:"NVMe SSD 500GB",파워:"500W 80+ 브론즈"}},
+{id:"pc2",cat:"pc",name:"i5-14400F + RTX 5060 게이밍 PC",price:129,perf:55,sum:"입문용 게이밍 PC",desc:"FHD 해상도에서 대부분 게임이 부드러워요",uses:["게이밍","사무용"],key:"RTX 5060 · 16GB · SSD 1TB",sp:{CPU:"인텔 코어 i5-14400F (10코어)",그래픽:"RTX 5060 8GB",메모리:"DDR5 16GB",저장장치:"NVMe SSD 1TB",파워:"650W 80+ 브론즈"}},
+{id:"pc3",cat:"pc",name:"라이젠7 9700X + RTX 5060 Ti 게이밍·영상 PC",price:179,perf:66,sum:"게임과 영상 편집을 함께",desc:"QHD 게임과 4K 영상 편집이 무난해요",uses:["게이밍","영상 작업","방송"],key:"RTX 5060 Ti 16GB · 32GB · SSD 1TB",sp:{CPU:"AMD 라이젠7 9700X (8코어)",그래픽:"RTX 5060 Ti 16GB",메모리:"DDR5 32GB",저장장치:"NVMe SSD 1TB",파워:"750W 80+ 골드"}},
+{id:"pc4",cat:"pc",name:"라이젠7 9800X3D + RTX 5070 게이밍 PC",price:249,perf:78,sum:"고주사율 게이밍 PC",desc:"QHD 165Hz 이상 모니터에 잘 맞아요",uses:["게이밍","방송","영상 작업"],key:"RTX 5070 · 32GB · SSD 2TB",sp:{CPU:"AMD 라이젠7 9800X3D (8코어)",그래픽:"RTX 5070 12GB",메모리:"DDR5 32GB",저장장치:"NVMe SSD 2TB",파워:"850W 80+ 골드"}},
+{id:"pc5",cat:"pc",name:"코어 울트라7 265K + RTX 5070 Ti 작업용 PC",price:299,perf:84,sum:"영상·3D 작업용 고사양 PC",desc:"렌더링과 4K 편집을 빠르게 처리해요",uses:["영상 작업","3D 렌더링","게이밍"],key:"RTX 5070 Ti 16GB · 64GB · SSD 2TB",sp:{CPU:"인텔 코어 울트라7 265K (20코어)",그래픽:"RTX 5070 Ti 16GB",메모리:"DDR5 64GB",저장장치:"NVMe SSD 2TB",파워:"850W 80+ 골드"}},
+{id:"pc6",cat:"pc",name:"라이젠9 9950X3D + RTX 5080 하이엔드 PC",price:459,perf:94,sum:"최상위 게이밍·작업 PC",desc:"4K 게임과 무거운 3D 작업도 여유 있어요",uses:["게이밍","3D 렌더링","영상 작업"],key:"RTX 5080 16GB · 64GB · SSD 4TB",sp:{CPU:"AMD 라이젠9 9950X3D (16코어)",그래픽:"RTX 5080 16GB",메모리:"DDR5 64GB",저장장치:"NVMe SSD 4TB",파워:"1000W 80+ 플래티넘"}},
+{id:"lt1",cat:"laptop",name:"15인치 초경량 사무용 노트북 (코어 울트라5)",price:109,perf:28,inch:15,res:"FHD",hz:60,sum:"가볍게 들고 다니는 사무용",desc:"1.2kg라 매일 들고 다니기 좋아요",uses:["사무용","학업용"],key:"1.2kg · 16GB · 15.6인치",sp:{CPU:"인텔 코어 울트라5 225H",그래픽:"내장 Arc 그래픽",메모리:"LPDDR5X 16GB",저장장치:"SSD 512GB",화면:"15.6인치 FHD 60Hz",무게:"1.2kg",배터리:"최대 20시간"}},
+{id:"lt2",cat:"laptop",name:"14인치 OLED 크리에이터 노트북 (라이젠 AI 7)",price:169,perf:45,inch:14,res:"QHD",hz:120,sum:"휴대용 사진·영상 편집",desc:"색이 정확한 OLED 화면이 장점이에요",uses:["영상 작업","사무용","디자인"],key:"OLED 2.8K · 32GB · 1.4kg",sp:{CPU:"AMD 라이젠 AI 7 350",그래픽:"내장 Radeon 860M",메모리:"LPDDR5X 32GB",저장장치:"SSD 1TB",화면:"14인치 2.8K OLED 120Hz",무게:"1.4kg",배터리:"최대 14시간"}},
+{id:"lt3",cat:"laptop",name:"15인치 입문 게이밍 노트북 (RTX 5050)",price:139,perf:46,inch:15,res:"FHD",hz:144,sum:"가성비 게이밍 노트북",desc:"롤, 발로란트, FC 온라인은 넉넉해요",uses:["게이밍","학업용"],key:"RTX 5050 · FHD 144Hz · 2.2kg",sp:{CPU:"인텔 코어 i5-13450HX",그래픽:"RTX 5050 8GB",메모리:"DDR5 16GB",저장장치:"SSD 512GB",화면:"15.6인치 FHD 144Hz",무게:"2.2kg",배터리:"최대 6시간"}},
+{id:"lt4",cat:"laptop",name:"16인치 게이밍 노트북 (RTX 5060)",price:199,perf:58,inch:16,res:"QHD",hz:165,sum:"균형 잡힌 게이밍 노트북",desc:"배그, 오버워치를 QHD로 즐길 수 있어요",uses:["게이밍","영상 작업"],key:"RTX 5060 · QHD+ 165Hz · 2.3kg",sp:{CPU:"AMD 라이젠7 260",그래픽:"RTX 5060 8GB",메모리:"DDR5 16GB",저장장치:"SSD 1TB",화면:"16인치 QHD+ 165Hz",무게:"2.3kg",배터리:"최대 8시간"}},
+{id:"lt5",cat:"laptop",name:"16인치 고사양 게이밍 노트북 (RTX 5070 Ti)",price:309,perf:74,inch:16,res:"QHD",hz:240,sum:"고주사율 게이밍 노트북",desc:"240Hz 화면으로 FPS 게임에 강해요",uses:["게이밍","3D 렌더링","영상 작업"],key:"RTX 5070 Ti · QHD+ 240Hz · 2.5kg",sp:{CPU:"인텔 코어 울트라9 275HX",그래픽:"RTX 5070 Ti 12GB",메모리:"DDR5 32GB",저장장치:"SSD 1TB",화면:"16인치 QHD+ 240Hz",무게:"2.5kg",배터리:"최대 7시간"}},
+{id:"lt6",cat:"laptop",name:"18인치 하이엔드 노트북 (RTX 5090)",price:549,perf:88,inch:18,res:"QHD",hz:240,sum:"데스크톱급 노트북",desc:"무겁지만 성능은 고사양 PC에 가까워요",uses:["게이밍","3D 렌더링","영상 작업"],key:"RTX 5090 · 64GB · 3.2kg",sp:{CPU:"인텔 코어 울트라9 285HX",그래픽:"RTX 5090 24GB",메모리:"DDR5 64GB",저장장치:"SSD 2TB",화면:"18인치 QHD+ 240Hz",무게:"3.2kg",배터리:"최대 5시간"}},
+{id:"m1",cat:"monitor",name:"24인치 FHD IPS 100Hz 모니터",price:15,perf:25,inch:24,res:"FHD",hz:100,sum:"기본 사무용 모니터",desc:"문서와 인터넷용으로 충분해요",uses:["사무용","학업용"],key:"24인치 · FHD · 100Hz",sp:{크기:"24인치 (60cm)",해상도:"FHD 1920×1080",주사율:"100Hz",패널:"IPS",응답속도:"5ms",단자:"HDMI, DP"}},
+{id:"m2",cat:"monitor",name:"27인치 QHD IPS 180Hz 게이밍 모니터",price:33,perf:60,inch:27,res:"QHD",hz:180,sum:"가성비 QHD 게이밍",desc:"가장 많이 고르는 게이밍 조합이에요",uses:["게이밍","사무용"],key:"27인치 · QHD · 180Hz",sp:{크기:"27인치 (68cm)",해상도:"QHD 2560×1440",주사율:"180Hz",패널:"Fast IPS",응답속도:"1ms",단자:"HDMI 2.0, DP 1.4"}},
+{id:"m3",cat:"monitor",name:"27인치 QHD OLED 240Hz 모니터",price:89,perf:86,inch:27,res:"QHD",hz:240,sum:"선명하고 빠른 OLED",desc:"검은색 표현과 반응 속도가 뛰어나요",uses:["게이밍","영상 감상","영상 작업"],key:"27인치 · QHD OLED · 240Hz",sp:{크기:"27인치 (68cm)",해상도:"QHD 2560×1440",주사율:"240Hz",패널:"QD-OLED",응답속도:"0.03ms",단자:"HDMI 2.1, DP 1.4, USB-C"}},
+{id:"m4",cat:"monitor",name:"32인치 4K IPS 144Hz 모니터",price:69,perf:76,inch:32,res:"4K",hz:144,sum:"큰 화면 4K 작업용",desc:"영상 편집과 4K 게임에 좋아요",uses:["영상 작업","게이밍","디자인"],key:"32인치 · 4K · 144Hz",sp:{크기:"32인치 (80cm)",해상도:"4K 3840×2160",주사율:"144Hz",패널:"IPS",응답속도:"1ms",단자:"HDMI 2.1, DP 1.4"}},
+{id:"m5",cat:"monitor",name:"34인치 울트라와이드 165Hz 모니터",price:55,perf:68,inch:34,res:"QHD",hz:165,wide:1,sum:"넓게 보는 와이드",desc:"레이싱 게임과 멀티태스킹에 좋아요",uses:["게이밍","사무용","영상 작업"],key:"34인치 와이드 · UWQHD · 165Hz",sp:{크기:"34인치 21:9 커브드",해상도:"UWQHD 3440×1440",주사율:"165Hz",패널:"VA",응답속도:"1ms",단자:"HDMI, DP"}},
+{id:"k1",cat:"periph",sub:"keyboard",name:"텐키리스 저소음 기계식 키보드",price:6.9,perf:40,sum:"조용한 사무용 키보드",desc:"사무실에서도 쓰기 좋은 저소음 축이에요",uses:["사무용","학업용"],key:"87키 · 저소음 적축 · 유선",sp:{배열:"텐키리스 87키",스위치:"저소음 적축",연결:"USB-C 유선",특징:"PBT 키캡"}},
+{id:"k2",cat:"periph",sub:"keyboard",name:"래피드 트리거 자석축 게이밍 키보드",price:17.9,perf:85,sum:"FPS용 고성능 키보드",desc:"키 입력 지점을 조절할 수 있어요",uses:["게이밍"],key:"75% · 자석축 · 8K 폴링",sp:{배열:"75% 82키",스위치:"자석축 (래피드 트리거)",연결:"유선 8000Hz",특징:"입력 지점 0.1~4.0mm 조절"}},
+{id:"ms1",cat:"periph",sub:"mouse",name:"무선 저소음 사무용 마우스",price:3.5,perf:30,sum:"조용한 무선 마우스",desc:"클릭 소리가 작고 배터리가 오래가요",uses:["사무용","학업용"],key:"무선 · 저소음 · 85g",sp:{무게:"85g",센서:"광학 4000DPI",연결:"2.4GHz, 블루투스",버튼:"5버튼 저소음"}},
+{id:"ms2",cat:"periph",sub:"mouse",name:"초경량 무선 게이밍 마우스",price:12.9,perf:88,sum:"가벼운 FPS용 마우스",desc:"55g라 빠르게 조준하기 좋아요",uses:["게이밍"],key:"55g · 무선 · 4K 폴링",sp:{무게:"55g",센서:"광학 32000DPI",연결:"2.4GHz 4000Hz",버튼:"5버튼"}},
+{id:"g1",cat:"part",sub:"gpu",name:"지포스 RTX 5060 8GB 그래픽카드",price:49,perf:55,sum:"FHD 게이밍용 그래픽카드",desc:"FHD에서 대부분 게임을 높은 옵션으로 돌려요",uses:["게이밍"],key:"8GB · 권장 파워 550W",sp:{메모리:"GDDR7 8GB",권장파워:"550W",길이:"240mm",특징:"DLSS 4 지원"}},
+{id:"g2",cat:"part",sub:"gpu",name:"지포스 RTX 5070 12GB 그래픽카드",price:89,perf:72,sum:"QHD 게이밍용 그래픽카드",desc:"QHD 고주사율에 가장 많이 고르는 급이에요",uses:["게이밍","영상 작업"],key:"12GB · 권장 파워 650W",sp:{메모리:"GDDR7 12GB",권장파워:"650W",길이:"300mm",특징:"DLSS 4 지원"}},
+{id:"g3",cat:"part",sub:"gpu",name:"라데온 RX 9070 XT 16GB 그래픽카드",price:99,perf:76,sum:"메모리 넉넉한 QHD 카드",desc:"16GB라 고해상도 텍스처에 여유 있어요",uses:["게이밍","3D 렌더링"],key:"16GB · 권장 파워 750W",sp:{메모리:"GDDR6 16GB",권장파워:"750W",길이:"320mm",특징:"FSR 4 지원"}},
+{id:"c1",cat:"part",sub:"cpu",name:"AMD 라이젠5 9600X 프로세서",price:29,perf:55,sum:"가성비 6코어 CPU",desc:"게임과 일반 작업에 무난해요",uses:["게이밍","사무용"],key:"6코어 12스레드 · AM5",sp:{"코어·스레드":"6코어 12스레드",최대클럭:"5.4GHz",소켓:"AM5",내장그래픽:"있음"}},
+{id:"c2",cat:"part",sub:"cpu",name:"AMD 라이젠7 9800X3D 프로세서",price:69,perf:86,sum:"게이밍 최강 CPU",desc:"3D V-Cache로 프레임이 높게 나와요",uses:["게이밍","방송"],key:"8코어 16스레드 · AM5",sp:{"코어·스레드":"8코어 16스레드",최대클럭:"5.2GHz",소켓:"AM5",내장그래픽:"있음"}},
+{id:"c3",cat:"part",sub:"cpu",name:"인텔 코어 울트라7 265K 프로세서",price:49,perf:78,sum:"작업에 강한 20코어 CPU",desc:"영상 인코딩과 멀티태스킹에 강해요",uses:["영상 작업","3D 렌더링","게이밍"],key:"20코어 20스레드 · LGA1851",sp:{"코어·스레드":"20코어 20스레드",최대클럭:"5.5GHz",소켓:"LGA1851",내장그래픽:"있음"}},
+{id:"r1",cat:"part",sub:"ram",name:"DDR5-6000 32GB (16GB×2) 메모리",price:15,perf:70,sum:"게임·작업 표준 메모리",desc:"요즘 PC에 가장 많이 쓰는 구성이에요",uses:["게이밍","영상 작업"],key:"32GB · 6000MHz",sp:{용량:"32GB (16GB×2)",속도:"DDR5 6000MHz",타이밍:"CL30"}},
+{id:"s1",cat:"part",sub:"ssd",name:"NVMe Gen4 SSD 1TB",price:13,perf:60,sum:"빠른 기본 저장장치",desc:"부팅과 게임 로딩이 빨라요",uses:["사무용","게이밍"],key:"1TB · 읽기 7000MB/s",sp:{용량:"1TB",인터페이스:"PCIe 4.0 NVMe",읽기:"7,000MB/s",쓰기:"6,000MB/s"}},
+{id:"s2",cat:"part",sub:"ssd",name:"NVMe Gen5 SSD 2TB",price:34,perf:90,sum:"초고속 대용량 저장장치",desc:"대용량 영상 파일 작업에 좋아요",uses:["영상 작업","3D 렌더링"],key:"2TB · 읽기 14000MB/s",sp:{용량:"2TB",인터페이스:"PCIe 5.0 NVMe",읽기:"14,000MB/s",쓰기:"12,000MB/s"}}
+];
+const GAMES=[["pubg","배틀그라운드",2.4],["fc","FC 온라인 (피파)",4.5],["lol","리그 오브 레전드",7],["ow","오버워치 2",3.2],["valo","발로란트",6],
+["lostark","로스트아크",3],["maple","메이플스토리",5],["sudden","서든어택",5.5],["sc","스타크래프트",6],["mine","마인크래프트",3.5],["gta","GTA 5",2.8],["diablo","디아블로 4",2.6],["bf6","배틀필드 6",2],["cyber","사이버펑크 2077",1.3],["mhw","몬스터 헌터 와일즈",1.1]];
+const MAIN_G=5;
+const RESF={FHD:1,QHD:1.45,"4K":2.4};
+const RESN={FHD:"FHD",QHD:"QHD","4K":"4K"};
+const SUBN={keyboard:"키보드",mouse:"마우스",gpu:"그래픽카드",cpu:"CPU",ram:"메모리",ssd:"SSD"};
+const gName=id=>GAMES.find(g=>g[0]===id)[1];
+const gK=id=>GAMES.find(g=>g[0]===id)[2];
+const fpsOf=(p,gid,res)=>Math.round(p.perf*gK(gid)/RESF[res||"FHD"]);
+const isSys=p=>p.cat==="pc"||p.cat==="laptop";
+const gamesFps=p=>isSys(p)||p.sub==="gpu";
+const group=p=>isSys(p)?"sys":p.cat==="monitor"?"mon":p.cat+"-"+p.sub;
+const tierName=v=>v<40?"저사양":v<70?"중간 사양":"고사양";
+const priceTxt=v=>{const n=Math.round(v*10000);return n.toLocaleString("ko-KR")};
+
+function icon(p){
+  const k=p.cat==="part"||p.cat==="periph"?p.sub:p.cat;
+  const a={
+  pc:`<rect x="38" y="6" width="44" height="78" rx="6" fill="var(--ic1)"/><rect x="38" y="6" width="44" height="78" rx="6" fill="none" stroke="var(--ic2)" stroke-width="1"/><rect x="44" y="12" width="32" height="66" rx="3" fill="#0d1b33"/>${[24,42,60].map(y=>`<circle cx="60" cy="${y}" r="8" fill="none" stroke="var(--ic3)" stroke-width="2.5"/><circle cx="60" cy="${y}" r="2.5" fill="var(--ic4)"/>`).join("")}<rect x="40" y="84" width="10" height="3" rx="1" fill="var(--ic2)"/><rect x="70" y="84" width="10" height="3" rx="1" fill="var(--ic2)"/>`,
+  laptop:`<path d="M26 12h68a4 4 0 0 1 4 4v46H22V16a4 4 0 0 1 4-4z" fill="var(--ic1)"/><rect x="27" y="17" width="66" height="40" rx="2" fill="#0d1b33"/><path d="M27 57l30-40h36v6L45 57z" fill="var(--ic3)" opacity=".25"/><path d="M12 62h96l-6 10H18z" fill="var(--ic2)"/><rect x="50" y="62" width="20" height="3" rx="1.5" fill="var(--ic1)" opacity=".4"/>`,
+  monitor:`<rect x="12" y="8" width="96" height="58" rx="5" fill="var(--ic1)"/><rect x="16" y="12" width="88" height="50" rx="2" fill="#0d1b33"/><path d="M16 62l40-50h48v10L64 62z" fill="var(--ic3)" opacity=".22"/><rect x="54" y="66" width="12" height="12" fill="var(--ic2)"/><rect x="38" y="78" width="44" height="5" rx="2.5" fill="var(--ic2)"/>`,
+  keyboard:`<rect x="8" y="26" width="104" height="40" rx="7" fill="var(--ic1)"/>${Array.from({length:36},(_,i)=>{const r=Math.floor(i/12),c=i%12;return `<rect x="${14+c*8}" y="${31+r*9}" width="6.5" height="7" rx="1.5" fill="${(r===0&&c<2)?"var(--ic3)":"var(--ic2)"}"/>`}).join("")}<rect x="32" y="58" width="56" height="5" rx="1.5" fill="var(--ic2)"/>`,
+  mouse:`<path d="M60 10c18 0 26 14 26 34v12c0 18-12 28-26 28S34 74 34 56V44c0-20 8-34 26-34z" fill="var(--ic1)"/><path d="M60 10v30" stroke="var(--ic2)" stroke-width="1.5"/><rect x="57" y="20" width="6" height="12" rx="3" fill="var(--ic3)"/><path d="M38 60c8 4 36 4 44 0" stroke="var(--ic3)" stroke-width="2" fill="none" opacity=".6"/>`,
+  gpu:`<rect x="8" y="22" width="104" height="42" rx="6" fill="var(--ic1)"/>${[34,86].map(x=>`<circle cx="${x}" cy="43" r="16" fill="#0d1b33"/><circle cx="${x}" cy="43" r="16" fill="none" stroke="var(--ic3)" stroke-width="2"/>${[0,60,120,180,240,300].map(d=>`<path d="M${x} 43 l0 -13" stroke="var(--ic2)" stroke-width="3" transform="rotate(${d} ${x} 43)"/>`).join("")}<circle cx="${x}" cy="43" r="4" fill="var(--ic4)"/>`).join("")}<rect x="14" y="64" width="40" height="6" fill="#c9a227"/>`,
+  cpu:`${Array.from({length:8},(_,i)=>`<rect x="${34+i*7}" y="8" width="3" height="10" fill="#c9a227"/><rect x="${34+i*7}" y="72" width="3" height="10" fill="#c9a227"/>`).join("")}<rect x="26" y="16" width="68" height="58" rx="5" fill="var(--ic2)"/><rect x="38" y="26" width="44" height="38" rx="3" fill="var(--ic1)"/><rect x="38" y="26" width="44" height="38" rx="3" fill="none" stroke="var(--ic3)" stroke-width="1.5"/><circle cx="32" cy="22" r="2" fill="var(--ic3)"/>`,
+  ram:`<rect x="6" y="28" width="108" height="30" rx="3" fill="var(--ic1)"/>${Array.from({length:8},(_,i)=>`<rect x="${12+i*13}" y="33" width="10" height="16" rx="1" fill="#0d1b33"/>`).join("")}<rect x="6" y="54" width="108" height="8" fill="#c9a227"/><rect x="56" y="54" width="4" height="8" fill="var(--bg)"/><rect x="6" y="22" width="108" height="6" rx="2" fill="var(--ic3)"/>`,
+  ssd:`<rect x="10" y="32" width="100" height="26" rx="3" fill="var(--ic1)"/><rect x="104" y="32" width="6" height="26" fill="#c9a227"/><rect x="22" y="37" width="22" height="16" rx="1.5" fill="#0d1b33"/><rect x="50" y="37" width="18" height="16" rx="1.5" fill="#0d1b33"/><rect x="74" y="37" width="18" height="16" rx="1.5" fill="#0d1b33"/><circle cx="16" cy="45" r="3" fill="var(--bg)"/><rect x="22" y="37" width="22" height="3" fill="var(--ic3)"/>`};
+  return `<svg viewBox="0 0 120 90" aria-hidden="true">${a[k]||a.pc}</svg>`;
+}
+
+const S={cat:"all",price:"all",tier:"all",sort:"rec",q:"",guide:null,cmp:{on:false,base:null,picks:[]}};
+const $=id=>document.getElementById(id);
+
+const USE_NEED={office:22,study:22,video:55,"3d":72};
+function need(a){
+  if(!a)return null;
+  if(a.cat==="pc"||a.cat==="laptop"||(a.cat==="part"&&(a.sub==="gpu"||a.sub==="cpu"))){
+    if(a.use==="game"){
+      const gs=a.games&&a.games.length?a.games:["lol"];
+      const hz=a.hz||60,rf=RESF[a.res||"FHD"];
+      return Math.min(100,Math.round(Math.max(...gs.map(g=>hz*rf/gK(g)))));
+    }
+    return USE_NEED[a.use]||null;
+  }
+  return null;
+}
+function inCat(p,a){
+  if(p.cat!==a.cat)return false;
+  if((a.cat==="periph"||a.cat==="part")&&a.sub&&p.sub!==a.sub)return false;
+  return true;
+}
+function judge(p,a){
+  if(!a||!inCat(p,a))return null;
+  const r={ok:true,why:"",bad:""};
+  const n=need(a);
+  if(n!=null&&p.perf<n){r.ok=false;r.bad="원하는 조건보다 사양이 낮아요"}
+  if(a.cat==="monitor"){
+    const order=["FHD","QHD","4K"];
+    if(a.size==="wide"&&!p.wide){r.ok=false;r.bad="와이드 모니터가 아니에요"}
+    else if(a.size&&a.size!=="wide"&&p.inch<+a.size){r.ok=false;r.bad="원하는 크기보다 작아요"}
+    if(a.res&&order.indexOf(p.res)<order.indexOf(a.res)){r.ok=false;r.bad="원하는 화질보다 낮아요"}
+    if(a.hz&&p.hz<a.hz){r.ok=false;r.bad="원하는 주사율보다 낮아요"}
+    if(r.ok)r.why=`${RESN[p.res]} · ${p.hz}Hz · ${p.inch}인치로 조건에 맞아요`;
+  }
+  if(a.cat==="laptop"&&a.lsize){
+    const [lo,hi]=a.lsize.split("-").map(Number);
+    if(p.inch<lo||p.inch>hi){if(r.ok)r.soft="화면 크기는 조건과 달라요"}
+  }
+  if((a.cat==="periph")&&a.use){
+    const g=a.use==="game";
+    if(g!==p.uses.includes("게이밍")){r.ok=false;r.bad=g?"게이밍용이 아니에요":"게이밍 특화 제품이에요"}
+  }
+  if(a.budget&&a.budget!=="any"){
+    const [lo,hi]=a.budget.split("-").map(Number);
+    if(p.price>hi){r.ok=false;r.bad="예산보다 비싸요"}
+  }
+  if(r.ok&&!r.why){
+    if(a.use==="game"&&gamesFps(p)){
+      const g=(a.games&&a.games[0])||"lol";
+      r.why=`${gName(g)} ${RESN[a.res||"FHD"]} 약 ${fpsOf(p,g,a.res)}fps`;
+    }else r.why=n!=null?`${tierName(n)} 작업에 충분한 사양이에요`:"조건에 맞아요";
+  }
+  if(r.ok&&r.soft)r.why+=` · ${r.soft}`;
+  return r;
+}
+
+function filtered(){
+  let L=P.filter(p=>S.cat==="all"||p.cat===S.cat);
+  if(S.q){const q=S.q.toLowerCase().replace(/\s/g,"");L=L.filter(p=>(p.name+p.key+Object.values(p.sp).join("")).toLowerCase().replace(/\s/g,"").includes(q))}
+  if(S.price!=="all"){const [lo,hi]=S.price.split("-").map(Number);L=L.filter(p=>p.price>=lo&&p.price<hi)}
+  if(S.tier!=="all"){const [lo,hi]=S.tier.split("-").map(Number);L=L.filter(p=>p.perf>=lo&&p.perf<hi)}
+  const a=S.guide;
+  const sc=p=>{const j=judge(p,a);if(!j)return 2;return j.ok?0:1};
+  const by={low:(x,y)=>x.price-y.price,high:(x,y)=>y.price-x.price,perf:(x,y)=>y.perf-x.perf};
+  L=L.slice();
+  if(S.sort==="rec"){
+    L.sort((x,y)=>sc(x)-sc(y)||(a&&sc(x)===0?(x.price-y.price):0));
+  }else L.sort((x,y)=>by[S.sort](x,y));
+  return L;
+}
+function renderTabs(){
+  $("tabs").innerHTML=CATS.map(([v,t])=>`<button class="tab" data-v="${v}" aria-pressed="${S.cat===v}">${t}</button>`).join("");
+}
+function renderGrid(){
+  const L=filtered(),a=S.guide;
+  let bestDone=false;
+  $("count").textContent=`${L.length}개 상품`;
+  if(!L.length){$("grid").innerHTML=`<div class="empty"><b>조건에 맞는 상품이 없어요</b><br>필터를 조금 넓혀보세요.</div>`;return}
+  $("grid").innerHTML=L.map(p=>{
+    const j=judge(p,a);
+    let badge="",reason="";
+    if(j){
+      if(j.ok&&!bestDone&&S.sort==="rec"){badge=`<span class="badge best">가장 잘 맞아요</span>`;bestDone=true}
+      else if(j.ok)badge=`<span class="badge ok">조건 충족</span>`;
+      reason=j.ok?`<div class="reason">${j.why}</div>`:`<div class="reason no">${j.bad}</div>`;
+    }
+    const pi=S.cmp.picks.indexOf(p.id);
+    return `<article class="card" tabindex="0" data-id="${p.id}">
+      <div class="thumb">${icon(p)}</div>${badge}<span class="pick">${pi>=0?pi+1:""}</span>
+      <div class="cname">${p.name}</div>
+      <div class="ckey">${p.key}</div>${reason}
+      <div class="mini" aria-hidden="true"><i style="width:${p.perf}%"></i></div>
+      <div class="cfoot"><span class="price">${priceTxt(p.price)}<small>원</small></span><span class="tier">${tierName(p.perf)}</span></div>
+    </article>`}).join("");
+  paintCmp();
+}
+function renderGuideBox(){
+  const a=S.guide;
+  if(!a){
+    $("gtext").innerHTML=`<h1>어떤 사양이 필요한지 몰라도 괜찮아요</h1><p>용도와 하는 게임만 알려주시면 맞는 제품을 골라드릴게요. 질문은 5~7개예요.</p>`;
+    $("gact").innerHTML=`<button class="cta" id="start">맞춤 추천 받기</button>`;
+    return;
+  }
+  const c=[];
+  c.push(CATS.find(x=>x[0]===a.cat)[1]+(a.sub?` · ${SUBN[a.sub]}`:""));
+  const UN={office:"사무용",study:"학업용",video:"영상 작업",["3d"]:"3D 작업",game:"게이밍"};
+  if(a.use)c.push(UN[a.use]);
+  (a.games||[]).forEach(g=>c.push(gName(g)));
+  if(a.size)c.push(a.size==="wide"?"와이드":`${a.size}인치 이상`);
+  if(a.lsize)c.push({"13-14":"14인치","15-16":"15~16인치","17-19":"17인치 이상"}[a.lsize]);
+  if(a.res)c.push(RESN[a.res]);
+  if(a.hz)c.push(`${a.hz}Hz`);
+  if(a.budget&&a.budget!=="any")c.push(BUD_LABEL[a.budget]);
+  const ok=P.filter(p=>{const j=judge(p,a);return j&&j.ok}).length;
+  $("gtext").innerHTML=`<h1>조건에 맞는 제품이 ${ok}개 있어요</h1><p>조건을 충족한 제품부터 보여드리고 있어요. 카드에 마우스를 올리면 사양을 쉽게 풀어서 보여드려요.</p><div class="chips">${c.map(x=>`<span class="chip">${x}</span>`).join("")}</div>`;
+  $("gact").innerHTML=`<button class="btn2" id="reset">조건 지우기</button><button class="cta" id="start">조건 수정</button>`;
+}
+
+const canHover=matchMedia("(hover:hover)").matches;
+const pop=$("pop");
+function popHTML(p){
+  const a=S.guide,n=a&&inCat(p,a)?need(a):null;
+  const gl=p.cat==="monitor"?"화면 등급":p.cat==="periph"?"기능 등급":"성능";
+  const fp=gamesFps(p)?(()=>{
+    const gs=a&&a.games&&a.games.length&&inCat(p,a)?a.games.slice(0,3):["lol","pubg","ow"];
+    const res=a&&a.res&&inCat(p,a)?a.res:"FHD";
+    return `<div class="fps">${gs.map(g=>`<span>${gName(g)} ${RESN[res]} <b>${fpsOf(p,g,res)}fps</b></span>`).join("")}</div>`})():"";
+  return `<div class="ptop"><div class="psum">${p.sum}</div><div class="pdesc">${p.desc}</div>
+    <div class="tags">${p.uses.map(u=>`<span class="tag">#${u}</span>`).join("")}</div>
+    <div class="gauge"><div class="gl"><span>${gl}</span><b>${tierName(p.perf)} · ${p.perf}점</b></div>
+    <div class="gt"><span class="knob" style="left:${p.perf}%"></span>${n!=null?`<span class="need" style="left:${n}%"></span>`:""}</div>
+    <div class="gl"><span>저사양</span><span>중간</span><span>고사양</span></div>${n!=null?`<div class="nl"><i></i>내 조건 ${n}점 <span>${p.perf>=n?"· 충분해요":"· "+(n-p.perf)+"점 부족해요"}</span></div>`:""}</div>${fp}</div>
+    <dl class="specs">${Object.entries(p.sp).map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
+}
+function showPop(card){
+  const p=P.find(x=>x.id===card.dataset.id);
+  pop.innerHTML=popHTML(p);
+  pop.classList.remove("sheet");
+  const r=card.getBoundingClientRect(),W=300,g=12,vw=innerWidth,vh=innerHeight;
+  let left=r.right+g;
+  if(left+W>vw-8)left=r.left-W-g;
+  if(left<8){left=Math.min(vw-W-8,Math.max(8,r.left));}
+  pop.style.left=left+"px";
+  const h=pop.offsetHeight;
+  let top=Math.max(76,Math.min(r.top,vh-h-12));
+  pop.style.top=top+"px";
+  pop.classList.add("on");
+}
+function showSheet(card){
+  const p=P.find(x=>x.id===card.dataset.id);
+  pop.innerHTML=popHTML(p)+`<button class="btn2" style="width:100%;margin-top:14px" id="pclose">닫기</button>`;
+  pop.classList.add("sheet","on");
+}
+function hidePop(){pop.classList.remove("on")}
+
+function paintCmp(){
+  document.body.classList.toggle("cmp",S.cmp.on);
+  $("cmp").setAttribute("aria-pressed",S.cmp.on);
+  const base=S.cmp.base&&P.find(x=>x.id===S.cmp.base);
+  document.querySelectorAll(".card").forEach(c=>{
+    const p=P.find(x=>x.id===c.dataset.id);
+    const picked=S.cmp.picks.includes(p.id);
+    c.classList.toggle("picked",S.cmp.on&&picked);
+    c.classList.toggle("can",S.cmp.on&&!!base&&!picked&&group(p)===group(base));
+    c.classList.toggle("cant",S.cmp.on&&!!base&&group(p)!==group(base));
+    c.querySelector(".pick").textContent=picked?S.cmp.picks.indexOf(p.id)+1:"";
+  });
+  const GN={sys:"PC·노트북",mon:"모니터"};
+  $("cmpmsg").textContent=!base?"비교할 첫 제품을 골라주세요.":`파란 테두리 제품과 비교할 수 있어요 (${GN[group(base)]||SUBN[base.sub]}끼리, 최대 3개). 다시 누르면 빠져요.`;
+  const t=$("tray");
+  t.classList.toggle("on",S.cmp.on&&S.cmp.picks.length>0);
+  $("tl").innerHTML=S.cmp.picks.map(id=>`<span class="ti">${P.find(x=>x.id===id).name}</span>`).join("");
+  $("tgo").disabled=S.cmp.picks.length<2;
+  $("tgo").textContent=S.cmp.picks.length<2?"1개 더 골라주세요":`비교 보기 (${S.cmp.picks.length})`;
+}
+function togglePick(id){
+  const c=S.cmp,i=c.picks.indexOf(id);
+  if(i>=0){c.picks.splice(i,1);if(!c.picks.length)c.base=null;else if(c.base===id)c.base=c.picks[0]}
+  else{
+    const p=P.find(x=>x.id===id);
+    if(c.base&&group(P.find(x=>x.id===c.base))!==group(p))return;
+    if(c.picks.length>=3)return;
+    c.picks.push(id);if(!c.base)c.base=id;
+  }
+  paintCmp();
+}
+function openCompare(){
+  const L=S.cmp.picks.map(id=>P.find(x=>x.id===id));
+  const a=S.guide;
+  const keys=[];L.forEach(p=>Object.keys(p.sp).forEach(k=>{if(!keys.includes(k))keys.push(k)}));
+  const rows=[];
+  rows.push(["가격",L.map(p=>priceTxt(p.price)+"원"),L.map(p=>-p.price)]);
+  rows.push([L[0].cat==="monitor"?"화면 등급":"성능",L.map(p=>`${tierName(p.perf)} · ${p.perf}점`),L.map(p=>p.perf)]);
+  if(L.every(gamesFps)){
+    const gs=a&&a.games&&a.games.length?a.games.slice(0,3):["lol","pubg","ow"];
+    const res=a&&a.res?a.res:"FHD";
+    gs.forEach(g=>rows.push([`${gName(g)} ${RESN[res]}`,L.map(p=>`약 ${fpsOf(p,g,res)}fps`),L.map(p=>fpsOf(p,g,res))]));
+  }
+  rows.push(["용도",L.map(p=>p.uses.map(u=>"#"+u).join(" ")),null]);
+  keys.forEach(k=>{
+    const vals=L.map(p=>p.sp[k]||"없음");
+    let num=null;
+    if(k==="무게")num=L.map(p=>p.sp[k]?-parseFloat(p.sp[k]):null);
+    if(k==="주사율")num=L.map(p=>p.sp[k]?parseFloat(p.sp[k]):null);
+    rows.push([k,vals,num]);
+  });
+  const body=rows.map(([k,vals,num])=>{
+    let w=-1;
+    if(num&&num.every(v=>v!=null)){const m=Math.max(...num);if(num.filter(v=>v===m).length===1)w=num.indexOf(m)}
+    return `<tr><th scope="row">${k}</th>${vals.map((v,i)=>`<td class="${i===w?"win":""}">${v}</td>`).join("")}</tr>`}).join("");
+  $("ctab").innerHTML=`<table><thead><tr><th></th>${L.map(p=>`<th>${p.name}<span class="thn">${p.sum}</span></th>`).join("")}</tr></thead><tbody>${body}</tbody></table>`;
+  $("cov").classList.add("on");
+}
+
+const BUD={
+  sys:[["0-100","100만원 이하","사무용, 가벼운 게임"],["100-200","100~200만원","대부분 게임을 FHD·QHD로"],["200-300","200~300만원","고주사율 게임, 영상 작업"],["300-9999","300만원 이상","최고 사양"],["any","상관없어요","예산보다 사양이 중요해요"]],
+  monitor:[["0-30","30만원 이하",""],["30-60","30~60만원",""],["60-9999","60만원 이상",""],["any","상관없어요",""]],
+  periph:[["0-5","5만원 이하",""],["5-15","5~15만원",""],["15-9999","15만원 이상",""],["any","상관없어요",""]],
+  part:[["0-30","30만원 이하",""],["30-70","30~70만원",""],["70-9999","70만원 이상",""],["any","상관없어요",""]]};
+const BUD_LABEL={};Object.values(BUD).forEach(l=>l.forEach(([v,t])=>BUD_LABEL[v]=t));
+const STEP={
+  cat:{q:"무엇을 찾고 계신가요?",d:"하나만 골라주세요.",k:"cat",o:[["pc","조립PC","책상에 두고 쓰는 데스크톱"],["laptop","노트북","들고 다니면서 쓰는 컴퓨터"],["monitor","모니터","화면만 따로 필요해요"],["periph","주변기기","키보드, 마우스"],["part","개별 부품","그래픽카드, CPU, 메모리, SSD"]]},
+  use:{q:"주로 어떤 용도로 쓰시나요?",d:"가장 많이 하는 일을 골라주세요.",k:"use",o:[["office","사무용","문서, 인터넷, 인강"],["video","영상 작업용","프리미어, 다빈치 리졸브 편집"],["3d","3D 작업용","블렌더, 시네마4D, 제품 렌더링"],["game","게이밍","온라인 게임, 스팀 게임"]]},
+  games:{q:"주로 어떤 게임을 하시나요?",d:"여러 개 고를 수 있어요. 가장 무거운 게임 기준으로 맞춰드려요.",k:"games",multi:1},
+  size:{q:"모니터는 어느 크기가 좋으세요?",d:"PC와 함께 쓸 모니터 기준이에요.",k:"size",o:[["24","24인치 이상","책상이 좁아도 괜찮아요"],["27","27인치 이상","가장 많이 쓰는 크기"],["32","32인치 이상","크게 보고 싶어요"],["wide","와이드","가로로 넓은 21:9 화면"]]},
+  lsize:{q:"노트북 화면은 어느 크기가 좋으세요?",d:"크면 보기 편하지만 무거워져요.",k:"lsize",o:[["13-14","14인치","가볍게 들고 다녀요 (1~1.5kg)"],["15-16","15~16인치","휴대성과 화면의 균형"],["17-19","17인치 이상","거의 책상에 두고 써요"]]},
+  res:{q:"화면은 얼마나 선명하면 좋을까요?",d:"선명할수록 더 높은 사양이 필요해요.",k:"res",o:[["FHD","FHD (1K)","가장 흔한 화질, 사양 부담이 적어요"],["QHD","QHD (2K)","27인치에서 가장 선명하고 인기 많아요"],["4K","4K (UHD)","아주 선명하지만 고사양이 필요해요"]]},
+  hz:{q:"화면이 얼마나 부드러우면 좋을까요?",d:"숫자가 클수록 움직임이 부드러워요. FPS 게임이면 144Hz 이상을 추천해요.",k:"hz",o:[["120","120Hz","일반 모니터보다 2배 부드러워요"],["144","144Hz","게이밍 기본"],["165","165Hz","조금 더 부드럽게"],["180","180Hz","요즘 가성비 게이밍 모니터"],["240","240Hz","FPS 고수용"]],two:1},
+  muse:{q:"모니터를 어디에 쓰시나요?",d:"",k:"use",o:[["office","사무·학업용","문서와 인터넷"],["video","영상 작업용","색과 선명도가 중요해요"],["game","게이밍","부드러운 화면이 중요해요"]]},
+  msize:{q:"어느 크기가 좋으세요?",d:"",k:"size",o:[["24","24인치 이상",""],["27","27인치 이상",""],["32","32인치 이상",""],["wide","와이드",""]]},
+  ptype:{q:"어떤 주변기기를 찾으세요?",d:"",k:"sub",o:[["keyboard","키보드",""],["mouse","마우스",""]]},
+  ktype:{q:"어떤 부품을 찾으세요?",d:"",k:"sub",o:[["gpu","그래픽카드","게임 성능을 가장 크게 좌우해요"],["cpu","CPU","컴퓨터의 두뇌"],["ram","메모리","동시에 여러 작업할 때 중요해요"],["ssd","SSD","저장 공간과 로딩 속도"]]},
+  puse:{q:"주로 어떤 용도로 쓰시나요?",d:"",k:"use",o:[["office","사무·학업용",""],["game","게이밍",""]]},
+  budget:{q:"예산은 어느 정도 생각하세요?",d:"예산을 넘는 제품은 뒤로 보내드려요.",k:"budget"}
+};
+function steps(a){
+  const s=["cat"];
+  if(a.cat==="pc"||a.cat==="laptop"){
+    s.push("use");
+    if(a.use==="game")s.push("games");
+    s.push(a.cat==="pc"?"size":"lsize");
+    if(a.use&&a.use!=="office")s.push("res");
+    if(a.use==="game")s.push("hz");
+  }else if(a.cat==="monitor")s.push("muse","msize","res","hz");
+  else if(a.cat==="periph")s.push("ptype","puse");
+  else if(a.cat==="part"){s.push("ktype");if(a.sub==="gpu"||a.sub==="cpu")s.push("use");if(a.use==="game"&&(a.sub==="gpu"||a.sub==="cpu"))s.push("games","res","hz")}
+  s.push("budget");
+  return s;
+}
+let W={a:{},i:0,more:false};
+function budOpts(a){return BUD[a.cat==="pc"||a.cat==="laptop"?"sys":a.cat]||BUD.sys}
+function renderW(){
+  const a=W.a,st=steps(a),id=st[W.i],d=STEP[id];
+  $("wprog").style.width=((W.i+1)/st.length*100)+"%";
+  $("wn").textContent=`${W.i+1} / ${st.length}`;
+  $("wback").style.visibility=W.i?"visible":"hidden";
+  let h=`<h2 id="wq">${d.q}</h2>${d.d?`<p class="qs">${d.d}</p>`:""}`;
+  if(id==="games"){
+    const sel=a.games||[];
+    h+=`<div class="opts">${GAMES.slice(0,MAIN_G).map(([v,t],i)=>`<button class="opt" data-g="${v}" aria-pressed="${sel.includes(v)}"><span class="oi">${t[0]}</span><span><span class="ot">${t}</span></span></button>`).join("")}</div>
+    <button class="more" id="gmore">${W.more?"접기":"기타 게임 더 보기"}${sel.filter(g=>GAMES.findIndex(x=>x[0]===g)>=MAIN_G).length?` · ${sel.filter(g=>GAMES.findIndex(x=>x[0]===g)>=MAIN_G).length}개 선택됨`:""}</button>
+    <div class="glist ${W.more?"on":""}">${GAMES.slice(MAIN_G).map(([v,t])=>`<button class="gi" data-g="${v}" aria-pressed="${sel.includes(v)}">${t}</button>`).join("")}</div>`;
+  }else{
+    const o=id==="budget"?budOpts(a):d.o;
+    h+=`<div class="opts ${d.two?"two":""}">${o.map(([v,t,ds],i)=>`<button class="opt" data-v="${v}" aria-pressed="${String(a[d.k])===v}"><span class="oi">${i+1}</span><span><span class="ot">${t}</span>${ds?`<br><span class="od">${ds}</span>`:""}</span></button>`).join("")}</div>`;
+  }
+  $("wbody").innerHTML=h;
+  const last=W.i===st.length-1;
+  const has=id==="games"?(a.games||[]).length>0:a[d.k]!=null;
+  $("wnext").textContent=last?"결과 보기":"다음";
+  $("wnext").disabled=!has;
+}
+function openW(){W={a:S.guide?JSON.parse(JSON.stringify(S.guide)):{},i:0,more:false};renderW();$("wov").classList.add("on");hidePop()}
+function closeW(){$("wov").classList.remove("on")}
+function nextW(){
+  const st=steps(W.a);
+  if(W.i<st.length-1){W.i++;W.more=false;renderW();$("wbody").scrollTop=0}
+  else{
+    const a=W.a,keep={};
+    steps(a).forEach(id=>{const k=STEP[id].k;if(a[k]!=null)keep[k]=a[k]});
+    keep.cat=a.cat;
+    S.guide=keep;S.cat=a.cat;S.sort="rec";$("fsort").value="rec";S.price="all";$("fprice").value="all";S.tier="all";$("ftier").value="all";
+    closeW();renderAll();
+    $("list").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"});
+  }
+}
+function clearAfter(k){
+  const order=["cat","sub","use","games","size","lsize","res","hz","budget"];
+  const i=order.indexOf(k);
+  order.slice(i+1).forEach(x=>delete W.a[x]);
+}
+
+function renderAll(){renderTabs();renderGuideBox();renderGrid()}
+$("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(!b)return;S.cat=b.dataset.v;renderAll()});
+$("q").addEventListener("input",e=>{S.q=e.target.value.trim();renderGrid()});
+$("fprice").addEventListener("change",e=>{S.price=e.target.value;renderGrid()});
+$("ftier").addEventListener("change",e=>{S.tier=e.target.value;renderGrid()});
+$("fsort").addEventListener("change",e=>{S.sort=e.target.value;renderGrid()});
+$("cmp").addEventListener("click",()=>{S.cmp.on=!S.cmp.on;if(!S.cmp.on){S.cmp.base=null;S.cmp.picks=[]}hidePop();paintCmp()});
+document.addEventListener("click",e=>{
+  if(e.target.closest("#start")){openW();return}
+  if(e.target.closest("#reset")){S.guide=null;S.cat="all";renderAll();return}
+  if(e.target.closest("#pclose")){pop.classList.remove("on","sheet");return}
+  const c=e.target.closest(".card");
+  if(c){
+    if(S.cmp.on){togglePick(c.dataset.id);return}
+    if(!canHover){showSheet(c);return}
+  }else if(pop.classList.contains("sheet")&&!e.target.closest("#pop"))pop.classList.remove("on","sheet");
+});
+const grid=$("grid");
+grid.addEventListener("mouseover",e=>{if(!canHover)return;const c=e.target.closest(".card");if(c&&!c.contains(e.relatedTarget))showPop(c)});
+grid.addEventListener("mouseout",e=>{const c=e.target.closest(".card");if(c&&!c.contains(e.relatedTarget))hidePop()});
+grid.addEventListener("focusin",e=>{const c=e.target.closest(".card");if(c&&canHover)showPop(c)});
+grid.addEventListener("focusout",hidePop);
+grid.addEventListener("keydown",e=>{const c=e.target.closest(".card");if(c&&(e.key==="Enter"||e.key===" ")){e.preventDefault();if(S.cmp.on)togglePick(c.dataset.id);else showSheet(c)}});
+addEventListener("scroll",()=>{if(!pop.classList.contains("sheet"))hidePop()},{passive:true});
+$("tclear").addEventListener("click",()=>{S.cmp.picks=[];S.cmp.base=null;paintCmp()});
+$("tgo").addEventListener("click",()=>{if(S.cmp.picks.length>=2)openCompare()});
+$("cclose").addEventListener("click",()=>$("cov").classList.remove("on"));
+$("cov").addEventListener("click",e=>{if(e.target.id==="cov")$("cov").classList.remove("on")});
+$("wclose").addEventListener("click",closeW);
+$("wov").addEventListener("click",e=>{if(e.target.id==="wov")closeW()});
+$("wback").addEventListener("click",()=>{if(W.i>0){W.i--;W.more=false;renderW()}});
+$("wnext").addEventListener("click",()=>{if(!$("wnext").disabled)nextW()});
+$("wbody").addEventListener("click",e=>{
+  if(e.target.closest("#gmore")){W.more=!W.more;renderW();return}
+  const g=e.target.closest("[data-g]");
+  if(g){const s=W.a.games=W.a.games||[];const i=s.indexOf(g.dataset.g);i>=0?s.splice(i,1):s.push(g.dataset.g);renderW();return}
+  const o=e.target.closest(".opt[data-v]");if(!o)return;
+  const id=steps(W.a)[W.i],k=STEP[id].k;
+  let v=o.dataset.v;if(k==="hz")v=+v;
+  if(W.a[k]!==v){W.a[k]=v;clearAfter(k)}
+  renderW();
+  setTimeout(nextW,180);
+});
+addEventListener("keydown",e=>{if(e.key==="Escape"){closeW();$("cov").classList.remove("on");pop.classList.remove("on","sheet")}});
+
+S.guide={cat:"laptop",use:"game",games:["pubg","ow"],lsize:"15-16",res:"QHD",hz:120,budget:"any"};S.cat="laptop";
+renderAll();
+}
+</script>
+</body>
+</html>
